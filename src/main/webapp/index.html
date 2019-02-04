@@ -1,42 +1,107 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Test 2</title>
+    <title>JSON Viewer</title>
     <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
     <link href="//cdn.jsdelivr.net/npm/jquery.fancytree@2.27/dist/skin-win8/ui.fancytree.min.css" rel="stylesheet">
     <script src="//cdn.jsdelivr.net/npm/jquery.fancytree@2.27/dist/jquery.fancytree-all-deps.min.js"></script>
   </head>
   <body>
-    <span onclick="myFunction()">Load Tree</span> 
-    <div id="tree"></div>
+    <!--   <form id="fileinfo" enctype="multipart/form-data" method="post" name="fileinfo"> -->
+    <label for="file">Choose JSON file to view:</label>
+    <input type="file" id="file" name="file"/>
+    <br>
+    <button id="btn">
+      Send
+    </button>
+    <button id="btnDestroy">
+      DestroySession
+    </button>
+    <!--     <input type="submit" value="Submit" onclick="uploadFile()"> -->
+    <!--   </form> -->
+    <div id="output"></div>
+    <div id="tree" style="border: thin solid black"></div>
   </body>
 </html>
 
-     <script type="text/javascript">
-        function myFunction() {// on page load
-            // Create the tree inside the <div id="tree"> element.
-            $("#tree").fancytree({
-                // Initial node data that sets 'lazy' flag on some leaf nodes
-                source : {
+<script type="text/javascript">
+    function myFunction() {
+        // Create the tree inside the <div id="tree"> element.
+        $("#tree").fancytree({
+            // Initial node data that sets 'lazy' flag on some leaf nodes
+            source : {
+                url : "TreeLoadingServlet",
+                data : {
+                    state : "initLoad"
+                },
+                cache : false
+            },
+            lazyLoad : function(event, data) {
+                var node = data.node;
+                // Load child nodes via Ajax GET /getTreeData?mode=children&parent=1234
+                data.result = {
                     url : "TreeLoadingServlet",
                     data : {
-                      state : "initLoad"
-                    },
-                    cache : false
-                },
-                lazyLoad : function(event, data) {
-                    var node = data.node;
-                    // Load child nodes via Ajax GET /getTreeData?mode=children&parent=1234
-                    data.result = {
-                        url : "TreeLoadingServlet",
-                        data : {
-                            state : "loadChildren",
-                            pos : node.data.pos
-                        }
-                    };
-                }
-            });
-            // Note: Loading and initialization may be asynchronous, so the nodes may not be accessible yet.
+                        state : "loadChildren",
+                        pos : node.data.pos
+                    }
+                };
+            }
+        });
+        // Note: Loading and initialization may be asynchronous, so the nodes may not be accessible yet.
+    }
+
+    //        $.function({...});
+    $('#btn').click(uploadFile);
+    $('#btnDestroy').click(destroySession);
+    function setOutput(data) {
+        $('#output').html(data);
+    }
+
+    function destroySession() {
+      alert("pressed destroy session");
+        $.ajax({
+        url : 'TreeLoadingServlet',
+        type: "get",
+        data: {"state": "destroySession"},
+        success : function(data) {
+            //$('#output').html(data);
+            alert(data);
+        }, 
+        cache : false,
+       // contentType : false,
+       // processData : false
+        });
+    }
+
+    function uploadFile() {
+        let chosenFile = $("#file")[0].files;
+        if (chosenFile.length == 0) {
+            return;
         }
-//        $.function({...});
-    </script>
+        // form.addEventListener("submit", function(event){
+        // event.preventDefault()
+        // })
+        // setOutput("Number of chosen files: " + ($("input[type=file]"))[0].files.length +"<br>" +
+        var formData = new FormData();
+        //alert(chosenFile[0]);
+        formData.append('file', chosenFile[0]);
+        // var fd = new FormData($("#fileinfo"));
+        //fd.append("CustomField", "This is some extra data");
+        $.ajax({
+            url : 'TreeLoadingServlet',
+            type : 'POST',
+            enctype : "multipart/form-data",
+            data : formData,
+            success : function(data) {
+                //$('#output').html(data);
+                alert(data);
+                myFunction();
+            },
+            cache : false,
+            contentType : false,
+            processData : false
+        });
+    }
+
+</script>

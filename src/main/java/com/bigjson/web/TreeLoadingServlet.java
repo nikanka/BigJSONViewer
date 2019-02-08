@@ -25,8 +25,14 @@ import com.bigjson.parser.JSONNode;
 @WebServlet("/TreeLoadingServlet")
 @MultipartConfig
 public class TreeLoadingServlet extends HttpServlet {
+	// make constants available to JavaScript too
 	static final String ATTR_FILE_NAME = "JSONFileName";
 	static final String ATTR_PARSER = "parser";
+	static final String TYPE_STRING = "string";
+	static final String TYPE_OBJECT = "object";
+	static final String TYPE_ARRAY = "array";
+	static final String TYPE_NUMBER = "number";
+	static final String TYPE_KEYWORD = "keyword";
 	Path tempDir = null;
 	List<JSONInterface> activeParsers = new ArrayList<JSONInterface>();
 
@@ -161,8 +167,27 @@ public class TreeLoadingServlet extends HttpServlet {
 
 	private static void writeNodeInJSON(PrintWriter out, JSONNode node) {
 		boolean lazy = node.getType() != JSONNode.TYPE_STRING && !node.isFullyLoaded();
-		out.print("{\"title\": \"" + getNodeTitle(node) + "\", " + "\"data\": {" + "\"pos\": "
-				+ node.getStartFilePosition() + "}, " + "\"lazy\":" + (lazy ? "true" : "false") + "}");
+		out.print("{\"title\": \"" + getNodeTitle(node) + "\", "
+				+ "\"data\": {" + "\"pos\": " + node.getStartFilePosition() + ", "
+						+ "\"type\": \"" + getTypeString(node.getType()) + "\"}, " + 
+				"\"lazy\":" + (lazy ? "true" : "false") + "}");
+	}
+	
+	private static String getTypeString(int type){
+		switch(type){
+			case JSONNode.TYPE_OBJECT:
+				return TYPE_OBJECT;
+			case JSONNode.TYPE_ARRAY:
+				return TYPE_ARRAY;
+			case JSONNode.TYPE_KEYWORD:
+				return TYPE_KEYWORD;
+			case JSONNode.TYPE_NUMBER:
+				return TYPE_NUMBER;
+			case JSONNode.TYPE_STRING:
+				return TYPE_STRING;
+			default:
+				return null;
+		}
 	}
 
 	private static String getNodeTitle(JSONNode node) {

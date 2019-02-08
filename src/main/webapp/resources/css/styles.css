@@ -1,0 +1,27 @@
+.view {
+    border-style: ridge;
+    overflow: auto;
+}
+#string_view {
+    height: 50px;
+}
+#tree_view {
+    height: 250px;
+}
+
+#menu {
+    position: absolute;
+    display: none;
+    background: white;
+    padding: .25em .4em;
+    margin: .3em;
+    background: #fff;
+    border: 1px solid #bebebe;
+    border-radius: .2em;
+   -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+}
+div.menu:hover {
+        background-color: #ccc;
+    }
+

@@ -1,33 +1,105 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>JSON Viewer</title>
+    <title>Big JSON Viewer</title>
+    <link rel="stylesheet" href="resources/css/styles.css">
     <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
     <link href="//cdn.jsdelivr.net/npm/jquery.fancytree@2.27/dist/skin-win8/ui.fancytree.min.css" rel="stylesheet">
     <script src="//cdn.jsdelivr.net/npm/jquery.fancytree@2.27/dist/jquery.fancytree-all-deps.min.js"></script>
+    <style>
+    </style>
   </head>
   <body>
-    <!--   <form id="fileinfo" enctype="multipart/form-data" method="post" name="fileinfo"> -->
-    <label for="file">Choose JSON file to view:</label>
-    <input type="file" id="file" name="file"/>
-    <br>
-    <button id="btn">
-      Send
-    </button>
-    <button id="btnDestroy">
-      DestroySession
-    </button>
-    <!--     <input type="submit" value="Submit" onclick="uploadFile()"> -->
-    <!--   </form> -->
-    <div id="output"></div>
-    <div id="tree" style="border: thin solid black"></div>
+    <h1>Big JSON Viewer</h1>
+    <div id="controls">
+      <label for="file">Choose JSON file:</label>
+      <input type="file" id="file" name="file"/>
+      <button id="btn">View JSON</button>
+    </div>
+    
+    <h2>JSON Tree</h2>
+    <div id="tree_view" class="view" overflow="scroll"></div>
+    
+    <h2>String View</h2>
+    <div id="string_view" class="view" overflow="scroll"></div>
+    
+ <!--   <div class="menu" id="menu">
+      <ul class="menu-options">
+        <li class="menu-option">Load full string</li>
+      </ul>
+    </div> --> 
+    <div class="menu" id="menu">Load full string</div> 
   </body>
 </html>
 
 <script type="text/javascript">
-    function myFunction() {
-        // Create the tree inside the <div id="tree"> element.
-        $("#tree").fancytree({
+////////////////// Context menu for a node //////////////////////////
+  const TYPE_STRING = 'string';
+  const menu = $('#menu');
+  
+  let menuVisible = false;
+
+  $(window).click(function(){
+    if(menuVisible) showMenu(false);
+  });
+  
+  function showMenu(show){
+    //menu.style.display = show ? "block" : "none";
+    menu.css('display', (show ? 'block' : 'none'));
+    menuVisible = show;
+  }
+  $("#tree_view").contextmenu(function(event) {
+    var node = $.ui.fancytree.getNode(event);
+    if(node !== null && node.data.type == TYPE_STRING){
+      if(node.data.type == TYPE_STRING){
+        event.preventDefault();
+        console.log('CONTEXTMENU: String node is clicked ', node);
+        menu.css({left:event.pageX, top:event.pageY-20});
+        // menu.style.left = event.pageX + 'px';
+        // menu.style.top = event.pageY + 'px';
+        showMenu(true);
+      }
+    }
+    return false;
+  });
+///////////////// 
+
+  // $("#tree_view").mousedown(function(event) {
+      // //console.log("Clicked (",event.which,")", event.target.className);
+      // // if(event.which == 3 && event.target.className == "fancytree-node")
+      // var node = $.ui.fancytree.getNode(event);
+      // //console.log("title: ", node.title, 
+      // //" data: ", node.data, " pos: ", node.data.pos);
+      // if(node !== null && node.data.type == TYPE_STRING){
+        // if(node.data.type == TYPE_STRING){
+          // console.log("MOUSEDOUN: String node is clicked, ", event.which);
+        // }
+      // }
+        // // Only for click and dblclick events:
+        // // 'title' | 'prefix' | 'expander' | 'checkbox' | 'icon'
+        // //tt = $.ui.fancytree.getEventTargetType(event);
+        // // switch (event.which) {
+        // // case 1:
+            // // alert('Left Mouse button pressed at ', node);
+            // // break;
+        // // case 2:
+            // // alert('Middle Mouse button pressed at ', node);
+            // // break;
+        // // case 3:
+            // // alert('Right Mouse button pressed at ', node);
+            // // break;
+        // // default:
+            // // alert('You have a strange Mouse!');
+    // // }
+    // // let button = document.querySelector("button");
+  // // button.addEventListener("click", () => {
+    // // console.log("Button clicked.");
+//   
+  // });
+
+    function viewTree() {
+        // Create the tree inside the <div id="tree_view"> element.
+        $("#tree_view").fancytree({
             // Initial node data that sets 'lazy' flag on some leaf nodes
             source : {
                 url : "TreeLoadingServlet",
@@ -42,35 +114,30 @@
                 data.result = {
                     url : "TreeLoadingServlet",
                     data : {
-                        state : "loadChildren",
-                        pos : node.data.pos
-                    }
-                };
-            }
-        });
+                        state : "loadChildren"
+                        , pos : node.data.pos
+                        }
+                    };
+                 },
+                 beforeSelect: function(event, data) {
+                   return false;
+                 }
+               });
         // Note: Loading and initialization may be asynchronous, so the nodes may not be accessible yet.
     }
 
-    //        $.function({...});
     $('#btn').click(uploadFile);
-    $('#btnDestroy').click(destroySession);
-    function setOutput(data) {
-        $('#output').html(data);
-    }
-
+    
     function destroySession() {
       alert("pressed destroy session");
         $.ajax({
-        url : 'TreeLoadingServlet',
-        type: "get",
-        data: {"state": "destroySession"},
-        success : function(data) {
-            //$('#output').html(data);
+          url : 'TreeLoadingServlet',
+          type: "get",
+          data: {"state": "destroySession"},
+          success : function(data) {
             alert(data);
-        }, 
-        cache : false,
-       // contentType : false,
-       // processData : false
+          }, 
+          cache : false,
         });
     }
 
@@ -79,10 +146,6 @@
         if (chosenFile.length == 0) {
             return;
         }
-        // form.addEventListener("submit", function(event){
-        // event.preventDefault()
-        // })
-        // setOutput("Number of chosen files: " + ($("input[type=file]"))[0].files.length +"<br>" +
         var formData = new FormData();
         //alert(chosenFile[0]);
         formData.append('file', chosenFile[0]);
@@ -94,9 +157,8 @@
             enctype : "multipart/form-data",
             data : formData,
             success : function(data) {
-                //$('#output').html(data);
-                alert(data);
-                myFunction();
+                //alert(data);
+                viewTree();
             },
             cache : false,
             contentType : false,
